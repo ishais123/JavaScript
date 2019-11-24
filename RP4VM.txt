@@ -1,0 +1,49 @@
+replicatedVMsInfo = new Array();
+// Construct query string
+queryString = "/fapi/rest/5_0/groups/" + cgId + "/settings";
+// Get consistncy group settings
+var results = System.getModule("com.rp4vm.helpers.utility").invokeRestMethod(user,restHost,queryString,password,getHttpMethod);
+// Add quotes to numeric values, to parse them as strings
+results = results.replace(/:(\d+)([,\}])/g, ':"$1"$2');
+System.debug("Consistency group settings: " + results);
+// Parse into json object
+var jsonObj = JSON.parse(results);
+// Get replication set settings
+var vmReplicationSetsSettings = jsonObj.vmReplicationSetsSettings;
+if (!vmReplicationSetsSettings)
+	throw "Could not retrieve replication set settings";
+// Get replicated virtual machines
+var replicatedVms = [];
+for(i in vmReplicationSetsSettings)
+{
+	replicatedVms = replicatedVms.concat(vmReplicationSetsSettings[i].replicatedVMs);
+}
+// Get copies settings
+var groupCopiesSettings = jsonObj.groupCopiesSettings;
+
+// Insert replicated vms ID into array of IDs
+for each (var vm in replicatedVms){
+	var replicationInfo = new Object();
+	replicationInfo.vmId = vm.vmUID.uuid;
+	replicationInfo.rpClusterId = vm.groupCopyUID.globalCopyUID.clusterUID.id;
+	replicationInfo.copyId = vm.groupCopyUID.globalCopyUID.copyUID;
+	for each (copySetting in groupCopiesSettings){
+		if ((copySetting.copyUID.globalCopyUID.clusterUID.id == replicationInfo.rpClusterId) && (copySetting.copyUID.globalCopyUID.copyUID == replicationInfo.copyId)){
+			System.log("Comparing " + copySetting.copyUID.globalCopyUID.clusterUID.id + "with " + replicationInfo.vmId);
+			System.log("Comparing " + copySetting.copyUID.globalCopyUID.copyUID + "with " + replicationInfo.copyId);
+			replicationInfo.roleInfo = copySetting.roleInfo.role;
+		}
+	}
+	replicatedVMsInfo.push(replicationInfo);
+}
+
+//Debugging
+System.debug("------------------------------");
+System.debug("Replicated VMs info: ");
+for each (vmInfo in replicatedVMsInfo){
+	System.debug("VM ID: " + vmInfo.vmId);
+	System.debug("RP Cluster ID: " + vmInfo.rpClusterId);
+	System.debug("Role Info: " + vmInfo.roleInfo);
+	System.debug("Copy ID: " + vmInfo.copyId);
+}
+System.debug("------------------------------");

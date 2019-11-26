@@ -32,7 +32,6 @@ function subString (number)
 {
     var split = number.toString().split("");
     var count = 0;
-
     for (var i = 0; i < split.length; i++)
     {
         if (split[i] > 0) {
@@ -41,15 +40,17 @@ function subString (number)
             }
         }
     }    
-    for (var i = 0; i < split.length; i++)
+    for (var z = 0; z < split.length; z++)
     {
-    var newnum = parseInt(split[i]+split[i+1], 10);
+    var newnum = parseInt(split[z]+split[z+1], 10);
     if (number%newnum == 0) {
         count ++;
     }
+    }
     return count;
+    
 }
- console.log(subString(877692));
+console.log(subString(877692));
 /*
 console.log(length);
 console.log(split);
